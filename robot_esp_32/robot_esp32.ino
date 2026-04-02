@@ -8,7 +8,7 @@
 
   Schemat podłączeń:
   ==================
-  MOSTEK H (L298N):
+  MOSTEK H (L298N):      ~Nie mam mostka H, miałem robić to na dwoch silnikach servo 3 pinowych (VCC, GND, PWM)
     IN1 → GPIO 25
     IN2 → GPIO 26
     IN3 → GPIO 27
@@ -18,8 +18,8 @@
     5V  → zewnętrzne zasilanie silników
     GND → wspólna masa
 
-  I2S DAC (MAX98357A):
-    BCLK → GPIO 22
+  I2S DAC (MAX98357A):   ~Moduł jest zbędny przy aktualnym pomyśle, skoro ESP32 ma zdobywać dane z sieci i przesyłać dalej na głośnik przez BT to wszystko się dzieje bezprzewodowo. Najwiekszym problemem jest to, że esp32 DZIELI antenę miedzy WIFI a BT, raz to raz to, dlatego ten moduł może się przydać jeżeli chcemy płynnie przerzucać dane z sieci do głośnika. Modułu samego w sobie NIE MAM.
+    BCLK → GPIO 22       ~Zrobimy to najtaniej, jak to możliwe, uzywasz bibliotek ESP32-audioI2S i podepniemy głośnik przewodowo podłączając kabel jack do GPIO25 i GND
     LRC  → GPIO 21
     DIN  → GPIO 23
     GND  → GND
