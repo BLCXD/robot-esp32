@@ -1,0 +1,6 @@
+[wokwi]
+version = 1
+firmware = "wowki_testing.ino"
+[simulation]
+diagram = "diagram.json"
+

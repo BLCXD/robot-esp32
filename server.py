@@ -21,6 +21,7 @@ AI_MODEL    = os.getenv("AI_MODEL", "claude-opus-4-20250514")
 SERVER_HOST = os.getenv("SERVER_HOST", "0.0.0.0")
 SERVER_PORT = int(os.getenv("SERVER_PORT", 5000))
 TTS_LANG    = os.getenv("TTS_LANG", "pl")
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")
 
 # ──────────────────────────────
 # Inicjalizacja klienta AI
@@ -33,7 +34,7 @@ def build_client():
             raise ValueError("Brak ANTHROPIC_API_KEY w .env")
         return anthropic.Anthropic(api_key=key)
 
-    elif AI_PROVIDER in ("openai", "groq", "ollama"):
+    elif AI_PROVIDER in ("openai", "groq", "ollama", "nvidia"):
         import openai
         if AI_PROVIDER == "openai":
             key = os.getenv("OPENAI_API_KEY")
@@ -51,8 +52,16 @@ def build_client():
         elif AI_PROVIDER == "ollama":
             base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
             return openai.OpenAI(api_key="ollama", base_url=base_url)
+        elif AI_PROVIDER == "nvidia":
+            key = os.getenv("NVIDIA_API_KEY")
+            if not key:
+                raise ValueError("Brak NVIDIA_API_KEY w .env")
+            return openai.OpenAI(
+                api_key=key,
+                base_url="https://integrate.api.nvidia.com/v1"
+            )
     else:
-        raise ValueError(f"Nieznany AI_PROVIDER: '{AI_PROVIDER}'. Opcje: anthropic | openai | groq | ollama")
+        raise ValueError(f"Nieznany AI_PROVIDER: '{AI_PROVIDER}'. Opcje: anthropic | openai | groq | ollama | nvidia")
 
 client = build_client()
 print(f"AI: {AI_PROVIDER.upper()} | Model: {AI_MODEL}")
