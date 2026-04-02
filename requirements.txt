@@ -1,0 +1,6 @@
+flask 
+flask-sock
+anthropic
+gtts
+pygame
+python-dotenv

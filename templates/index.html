@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robot AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c26;
+    --accent: #00e5ff;
+    --accent2: #ff4d6d;
+    --accent3: #a8ff3e;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --border: #2a2a38;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    overflow-x: hidden;
+  }
+
+  /* Tło - siatka */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 1;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(10px);
+  }
+
+  .logo {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent); }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+  .dot.connected { background: var(--accent3); box-shadow: 0 0 8px var(--accent3); }
+  .dot.error { background: var(--accent2); }
+
+  main {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+    padding: 24px 32px;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .left-panel { display: flex; flex-direction: column; gap: 16px; }
+
+  /* Chat */
+  .chat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    flex: 1;
+    min-height: 280px;
+    max-height: 380px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1.5;
+    max-width: 85%;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.user {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    align-self: flex-end;
+    color: var(--text);
+  }
+
+  .message.ai {
+    background: rgba(0,229,255,0.06);
+    border: 1px solid rgba(0,229,255,0.2);
+    align-self: flex-start;
+    color: var(--accent);
+  }
+
+  .message.system {
+    background: rgba(168,255,62,0.06);
+    border: 1px solid rgba(168,255,62,0.2);
+    align-self: center;
+    color: var(--accent3);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .message.error {
+    background: rgba(255,77,109,0.06);
+    border: 1px solid rgba(255,77,109,0.2);
+    color: var(--accent2);
+    align-self: center;
+    font-size: 13px;
+  }
+
+  /* Input AI */
+  .input-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .prompt-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .prompt-input:focus { border-color: var(--accent); }
+  .prompt-input::placeholder { color: var(--muted); }
+
+  .btn {
+    padding: 14px 22px;
+    border-radius: var(--radius);
+    border: none;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: #33ebff; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Sekcja sterowania */
+  .right-panel { display: flex; flex-direction: column; gap: 16px; }
+
+  .panel-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .panel-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Strzałki */
+  .dpad {
+    display: grid;
+    grid-template-areas:
+      ". up ."
+      "left stop right"
+      ". down .";
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    max-width: 220px;
+    margin: 0 auto;
+  }
+
+  .dpad-btn {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .dpad-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.05); }
+  .dpad-btn:active, .dpad-btn.pressed {
+    background: rgba(0,229,255,0.15);
+    border-color: var(--accent);
+    transform: scale(0.94);
+  }
+
+  .dpad-btn.stop-btn {
+    background: rgba(255,77,109,0.08);
+    border-color: rgba(255,77,109,0.3);
+    color: var(--accent2);
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+  }
+  .dpad-btn.stop-btn:hover { background: rgba(255,77,109,0.18); border-color: var(--accent2); }
+
+  .up    { grid-area: up; }
+  .left  { grid-area: left; }
+  .stop  { grid-area: stop; }
+  .right { grid-area: right; }
+  .down  { grid-area: down; }
+
+  /* Thinking indicator */
+  .thinking {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    padding: 8px 0;
+  }
+  .thinking.active { display: flex; }
+
+  .thinking-dots span {
+    display: inline-block;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: blink 1.2s infinite;
+  }
+  .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+
+  /* Ruch info */
+  .move-badge {
+    display: inline-block;
+    background: rgba(168,255,62,0.1);
+    border: 1px solid rgba(168,255,62,0.3);
+    color: var(--accent3);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 6px;
+  }
+
+  footer {
+    position: relative;
+    z-index: 1;
+    padding: 12px 32px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    gap: 20px;
+  }
+
+  @media (max-width: 700px) {
+    main { grid-template-columns: 1fr; padding: 16px; }
+    header { padding: 14px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Robot<span>AI</span></div>
+  <div class="status-bar">
+    <div class="dot" id="dot-ws"></div>
+    <span id="status-text">Łączenie...</span>
+  </div>
+</header>
+
+<main>
+  <div class="left-panel">
+
+    <div class="chat-box" id="chat">
+      <div class="message system">Witaj! Wpisz pytanie lub użyj strzałek do sterowania.</div>
+    </div>
+
+    <div class="thinking" id="thinking">
+      <div class="thinking-dots"><span></span><span></span><span></span></div>
+      <span>Robot myśli...</span>
+    </div>
+
+    <div class="input-row">
+      <input
+        type="text"
+        class="prompt-input"
+        id="prompt-input"
+        placeholder="Zapytaj robota lub wydaj komendę ruchu..."
+        maxlength="300"
+      />
+      <button class="btn btn-primary" id="send-btn" onclick="sendPrompt()">Wyślij</button>
+    </div>
+
+  </div>
+
+  <div class="right-panel">
+
+    <div class="panel-card">
+      <div class="panel-title">Sterowanie manualne</div>
+      <div class="dpad">
+        <button class="dpad-btn up"       onmousedown="startMove('FORWARD')"  onmouseup="stopMove()" onmouseleave="stopMove()" ontouchstart="startMove('FORWARD')"  ontouchend="stopMove()">▲</button>
+        <button class="dpad-btn left"     onmousedown="startMove('LEFT')"     onmouseup="stopMove()" onmouseleave="stopMove()" ontouchstart="startMove('LEFT')"     ontouchend="stopMove()">◄</button>
+        <button class="dpad-btn stop-btn" onclick="sendControl('STOP')">STOP</button>
+        <button class="dpad-btn right"    onmousedown="startMove('RIGHT')"    onmouseup="stopMove()" onmouseleave="stopMove()" ontouchstart="startMove('RIGHT')"    ontouchend="stopMove()">►</button>
+        <button class="dpad-btn down"     onmousedown="startMove('BACKWARD')" onmouseup="stopMove()" onmouseleave="stopMove()" ontouchstart="startMove('BACKWARD')" ontouchend="stopMove()">▼</button>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <div class="panel-title">Szybkie komendy AI</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn btn-primary" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);" onclick="quickCmd('Jedź do przodu przez 2 sekundy')">➜ Do przodu 2s</button>
+        <button class="btn btn-primary" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);" onclick="quickCmd('Obróć się w prawo o 90 stopni')">↻ Obróć w prawo</button>
+        <button class="btn btn-primary" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);" onclick="quickCmd('Obróć się w lewo o 90 stopni')">↺ Obróć w lewo</button>
+        <button class="btn btn-primary" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);" onclick="quickCmd('Kim jesteś i co potrafisz?')">🤖 Przedstaw się</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <span>Robot AI Assistant</span>
+  <span>ESP32-WROOM + Claude API</span>
+</footer>
+
+<script>
+  const chat = document.getElementById('chat');
+  const input = document.getElementById('prompt-input');
+  const sendBtn = document.getElementById('send-btn');
+  const thinking = document.getElementById('thinking');
+  const dot = document.getElementById('dot-ws');
+  const statusText = document.getElementById('status-text');
+
+  let ws = null;
+  let moveInterval = null;
+
+  // WebSocket z serwerem
+  function connectWS() {
+    ws = new WebSocket(`ws://${location.host}/ws/web`);
+
+    ws.onopen = () => {
+      dot.className = 'dot connected';
+      statusText.textContent = 'Połączono';
+    };
+
+    ws.onclose = () => {
+      dot.className = 'dot error';
+      statusText.textContent = 'Rozłączono – retry...';
+      setTimeout(connectWS, 3000);
+    };
+
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'ai_response') {
+        setThinking(false);
+        addMessage(msg.text + (msg.has_movement ? '<span class="move-badge">🤖 ruch</span>' : ''), 'ai');
+      } else if (msg.type === 'error') {
+        setThinking(false);
+        addMessage(msg.text, 'error');
+      } else if (msg.type === 'esp32_status') {
+        // status z ESP32 - opcjonalnie pokaż
+      }
+    };
+  }
+
+  function addMessage(text, type) {
+    const div = document.createElement('div');
+    div.className = `message ${type}`;
+    div.innerHTML = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function setThinking(active) {
+    thinking.classList.toggle('active', active);
+    sendBtn.disabled = active;
+  }
+
+  async function sendPrompt() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage(text, 'user');
+    input.value = '';
+    setThinking(true);
+
+    try {
+      await fetch('/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+    } catch(e) {
+      setThinking(false);
+      addMessage('Błąd połączenia z serwerem', 'error');
+    }
+  }
+
+  function quickCmd(cmd) {
+    input.value = cmd;
+    sendPrompt();
+  }
+
+  // Sterowanie manualne
+  async function sendControl(action, duration = 0) {
+    await fetch('/control', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, duration })
+    });
+  }
+
+  function startMove(action) {
+    sendControl(action);
+    moveInterval = setInterval(() => sendControl(action), 200);
+  }
+
+  function stopMove() {
+    if (moveInterval) {
+      clearInterval(moveInterval);
+      moveInterval = null;
+      sendControl('STOP');
+    }
+  }
+
+  // Klawiatura
+  const keyMap = {
+    'ArrowUp': 'FORWARD', 'w': 'FORWARD',
+    'ArrowDown': 'BACKWARD', 's': 'BACKWARD',
+    'ArrowLeft': 'LEFT', 'a': 'LEFT',
+    'ArrowRight': 'RIGHT', 'd': 'RIGHT',
+    ' ': 'STOP'
+  };
+
+  const pressedKeys = new Set();
+
+  document.addEventListener('keydown', (e) => {
+    if (document.activeElement === input) return;
+    const action = keyMap[e.key];
+    if (action && !pressedKeys.has(e.key)) {
+      pressedKeys.add(e.key);
+      if (action === 'STOP') sendControl('STOP');
+      else startMove(action);
+    }
+  });
+
+  document.addEventListener('keyup', (e) => {
+    if (keyMap[e.key]) {
+      pressedKeys.delete(e.key);
+      if (pressedKeys.size === 0) stopMove();
+    }
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendPrompt();
+  });
+
+  connectWS();
+</script>
+</body>
+</html>
