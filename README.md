@@ -16,17 +16,11 @@ robot/
 ## 1. Instalacja — Serwer Python
 
 ```bash
-pip install flask flask-sock anthropic gtts
+pip install -r requirements.txt
 ```
 
-Ustaw klucz API Anthropic:
-```bash
-# Linux/Mac
-export ANTHROPIC_API_KEY=sk-ant-...
+Ustaw watrości w .env
 
-# Windows (CMD)
-set ANTHROPIC_API_KEY=sk-ant-...
-```
 
 Uruchom serwer:
 ```bash
@@ -39,7 +33,7 @@ Sprawdź swoje IP (potrzebujesz go dla ESP32):
 ip addr | grep 192.168
 
 # Windows
-ipconfig
+ipconfig /all
 ```
 
 Otwórz przeglądarkę: **http://localhost:5000**
