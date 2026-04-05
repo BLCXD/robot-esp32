@@ -8,25 +8,57 @@
       "id": "esp",
       "top": 0,
       "left": 0,
-      "attrs": {
-        "env": "arduino-core"
-      }
+      "attrs": { "env": "arduino-core" }
     },
     {
       "type": "board-ssd1306",
       "id": "oled",
+      "top": 140,
+      "left": -60,
+      "attrs": { "i2cAddress": "0x3c" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_in1",
+      "top": -90,
+      "left": 150,
+      "attrs": { "color": "green", "label": "IN1 (Przód)" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_in2",
+      "top": -40,
+      "left": 150,
+      "attrs": { "color": "red", "label": "IN2 (Tył)" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_in3",
+      "top": 10,
+      "left": 150,
+      "attrs": { "color": "blue", "label": "IN3 (Skręt-Lewo)" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_in4",
       "top": 60,
-      "left": -160,
-      "attrs": {
-        "i2cAddress": "0x3c"
-      }
+      "left": 150,
+      "attrs": { "color": "yellow", "label": "IN4 (Skręt-Prawo)" }
     }
   ],
   "connections": [
     [ "esp:27", "oled:SDA", "green", [ "v0" ] ],
     [ "esp:14", "oled:SCL", "blue", [ "v0" ] ],
     [ "esp:3V3", "oled:VCC", "red", [ "v0" ] ],
-    [ "esp:GND.2", "oled:GND", "black", [ "v0" ] ]
+    [ "esp:GND.1", "oled:GND", "black", [ "v0" ] ],
+    [ "esp:12", "led_in1:A", "green", [ "v0" ] ],
+    [ "esp:GND.3", "led_in1:C", "black", [ "v0" ] ],
+    [ "esp:26", "led_in2:A", "red", [ "v0" ] ],
+    [ "esp:GND.3", "led_in2:C", "black", [ "v0" ] ],
+    [ "esp:33", "led_in3:A", "blue", [ "v0" ] ],
+    [ "esp:GND.3", "led_in3:C", "black", [ "v0" ] ],
+    [ "esp:32", "led_in4:A", "yellow", [ "v0" ] ],
+    [ "esp:GND.3", "led_in4:C", "black", [ "v0" ] ]
   ],
   "dependencies": {}
 }
