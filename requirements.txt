@@ -1,0 +1,4 @@
+Flask==3.0.3
+Flask-SocketIO==5.3.6
+openai==1.54.0
+python-dotenv==1.0.1
